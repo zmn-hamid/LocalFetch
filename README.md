@@ -6,8 +6,10 @@ A simple system to easily transfer text between your devices using local network
 
 # How To Use
 
+Download the files needed as described bellow
+
 1. Open port 8000 in your firewall so other devices in your local network can connect to it.
-    For windows use `open_port_8000.bat` (Run as administrator), for linux use `open_port_8000.sh`
+    For windows you can use `open_port_8000.bat` (Run as administrator), for linux it's `open_port_8000.sh`
 2. Run the server in a Windows OS (the left window in the demo is the server)
 3. Run the Android/Windwos/Linux app in another device (right side of the demo)
 4. Copy the address from server to ther first field of the app. You can get the ip:port from
