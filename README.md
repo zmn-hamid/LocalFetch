@@ -2,26 +2,30 @@
 
 A simple system to easily transfer text between your devices using local network.
 
-[!demo](https://github.com/user-attachments/assets/987b48b1-8cbb-40ca-9752-fb162d3d9456)
+[demo](https://github.com/user-attachments/assets/987b48b1-8cbb-40ca-9752-fb162d3d9456)
 
 # How To Use
 
-1. Run the server in a Windows OS (left side of the demo)
-2. Run the Android/Windwos/Linux app in another device (right side of the demo)
-3. Copy the address from server to ther first field of the app. You can get the ip:port from
-    the qrcode on the top-right. It should in this format: `192.168.1.x:8000`
-4. Either receive the text from the server or send a new one, as shown in the demo.
+1. Open port 8000 in your firewall so other devices in your local network can connect to it.
+    For windows use `open_port_8000.bat` (Run as administrator), for linux use `open_port_8000.sh`
+2. Run the server in a Windows OS (the left window in the demo is the server)
+3. Run the Android/Windwos/Linux app in another device (right side of the demo)
+4. Copy the address from server to ther first field of the app. You can get the ip:port from
+    the qrcode on the top-right. It should in this format: `192.168.1.x:8000` (in the demo i use the `Copy Addr` button to get this)
+5. Either receive the text from the server or send a new one, as shown in the demo.
 
-This way you can send and receive between your devices. Note that all of these devices
-should be connected to the same network for this to work. It doesn't use any internet, It just requires
-one so you can send data locally, the same way apps like Shareit work
+This way you can send and receive text between your devices. Note that all of these devices
+should be connected to the same network for this to work. It doesn't use any website, it just require network
+so you can send data locally within that network, the same way apps like Shareit work.
 
 # State Of The Project
 
-The project is technically working correctly, but a few change need to be made:
+This project is technically working correctly, but a some change need to be made:
 
 1. More beautiful visuals, icons, etc.
 2. Official exports for all devices. Currently it's more of a debug build, specially for android.
+3. Server exports for other devices, specially linux
+4. Support for files as well
 
 I'll work on these in my free time but I'm not sure how long it'd take. Any contribution is appreciated tho.
 
