@@ -15,9 +15,6 @@ func _ready():
     send_button.pressed.connect(_on_send_button_pressed)
     receive_button.pressed.connect(_on_receive_button_pressed)
     http_request_node.request_completed.connect(_on_request_completed)
-
-    if OS.has_feature("debug"): # set ip port for faster debug
-        ipport_input.text = "192.168.1.186:8000"
     
     _log_status("Client initialized. Enter Server IP:Port and send/receive text.")
 
