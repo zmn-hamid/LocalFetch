@@ -6,7 +6,7 @@ A simple system to easily transfer text between your devices using local network
 
 # How To Use
 
-Download the files needed as described bellow
+Download the files needed as described bellow, from the "Releases" section.
 
 1. Open port 8000 in your firewall so other devices in your local network can connect to it.
     For windows you can use `open_port_8000.bat` (Run as administrator), for linux it's `open_port_8000.sh`
