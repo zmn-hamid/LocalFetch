@@ -2,6 +2,8 @@
 
 A simple system to easily transfer text between your devices using local network.
 
+[demo]([https://youtu.be/vt5fpE0bzSY](https://github.com/user-attachments/assets/987b48b1-8cbb-40ca-9752-fb162d3d9456))
+
 # How To Use
 
 1. Run the server in a Windows OS (left side of the demo)
