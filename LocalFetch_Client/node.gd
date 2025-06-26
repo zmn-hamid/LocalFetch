@@ -1,5 +1,7 @@
+class_name Main
 extends Node
 
+@onready var main_control_node: Control = $Control
 @onready var ipport_input: LineEdit = %IPPort
 @onready var text_to_send_input: TextEdit = %TextInput
 @onready var send_button: Button = %SendButton
@@ -7,21 +9,23 @@ extends Node
 @onready var text_output: TextEdit = %TextOutput
 @onready var status_output: TextEdit = %TextStatus
 @onready var http_request_node: HTTPRequest = %HTTPRequest
+@onready var context_exit: Control = %ContextExit
 
 var server_base_url: String = ""
 var _last_initiated_method: int # Will store HTTPClient.METHOD_GET or HTTPClient.METHOD_POST
 
+
 func _ready():
+    Globals.main_node = self
+
     send_button.pressed.connect(_on_send_button_pressed)
     receive_button.pressed.connect(_on_receive_button_pressed)
     http_request_node.request_completed.connect(_on_request_completed)
     
     _log_status("Client initialized. Enter Server IP:Port and send/receive text.")
 
-
 func _log_status(message: String):
-    var timestamp = Time.get_time_string_from_system() # Gets time like HH:MM:SS
-    var new_log_entry = "[%s] %s" % [timestamp, message]
+    var new_log_entry = "%s" % [message]
     
     if status_output.text.is_empty():
         status_output.text = new_log_entry
@@ -30,13 +34,11 @@ func _log_status(message: String):
     
     # Scroll to the bottom after the text has been updated
     # Using call_deferred to ensure UI update has happened before trying to scroll
-    # status_output.call_deferred("_scroll_to_bottom")
     _scroll_to_bottom.call_deferred()
 
 func _scroll_to_bottom():
     # Ensures the TextEdit scrolls to the latest message
     status_output.scroll_vertical = status_output.get_v_scroll_bar().max_value
-
 
 func _update_server_url() -> bool:
     var ip_port_text = ipport_input.text.strip_edges()
@@ -59,7 +61,6 @@ func _update_server_url() -> bool:
         return false
         
     return true
-
 
 func _on_send_button_pressed():
     if not _update_server_url():
@@ -84,7 +85,6 @@ func _on_send_button_pressed():
         _log_status("Error: Failed to start send request. Code: %s" % error)
         push_error("HTTPRequest (POST) error: " + str(error))
 
-
 func _on_receive_button_pressed():
     if not _update_server_url():
         return
@@ -100,7 +100,6 @@ func _on_receive_button_pressed():
         _last_initiated_method = -1 # Reset if request failed to start
         _log_status("Error: Failed to start receive request. Code: %s" % error)
         push_error("HTTPRequest (GET) error: " + str(error))
-
 
 func _on_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray):
     if _result != HTTPRequest.RESULT_SUCCESS:
@@ -130,11 +129,10 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
     
     _last_initiated_method = -1 # Reset after handling
 
-
-func _unhandled_input(event: InputEvent):
-    if ipport_input.has_focus() and event.is_action_pressed("ui_accept"):
-        _on_receive_button_pressed() # Trigger receive on Enter in IP field
-        get_viewport().set_input_as_handled()
-    elif text_to_send_input.has_focus() and event.is_action_pressed("ui_accept") and event.is_command_or_control_pressed():
-        _on_send_button_pressed() # Trigger send on Ctrl/Cmd+Enter in text input field
-        get_viewport().set_input_as_handled()
+# func _unhandled_input(event: InputEvent):
+#     if ipport_input.has_focus() and event.is_action_pressed("ui_accept"):
+#         _on_receive_button_pressed() # Trigger receive on Enter in IP field
+#         get_viewport().set_input_as_handled()
+#     elif text_to_send_input.has_focus() and event.is_action_pressed("ui_accept") and event.is_command_or_control_pressed():
+#         _on_send_button_pressed() # Trigger send on Ctrl/Cmd+Enter in text input field
+#         get_viewport().set_input_as_handled()

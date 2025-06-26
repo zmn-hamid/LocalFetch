@@ -1,0 +1,65 @@
+[gd_resource type="Theme" load_steps=9 format=3 uid="uid://bgynmgysleph7"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vk1wc"]
+bg_color = Color(0.37, 0.27972, 0.1443, 1)
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gttji"]
+bg_color = Color(0.55, 0.416533, 0.242, 1)
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kumq8"]
+bg_color = Color(0.702351, 0.579173, 0.388456, 1)
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jhqhc"]
+bg_color = Color(0.37, 0.27972, 0.1443, 1)
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qkpn8"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.944, 0.86, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rgm6y"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.517647)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_t0bju"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.944, 0.86, 1)
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i1vcn"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.517647)
+corner_radius_bottom_left = 25
+
+[resource]
+Button/colors/font_color = Color(0.126646, 0.0941573, 0.0461402, 1)
+Button/colors/font_focus_color = Color(0.79, 0.71732, 0.6083, 1)
+Button/colors/font_hover_color = Color(0.126646, 0.0941573, 0.0461402, 1)
+Button/colors/font_hover_pressed_color = Color(0.79, 0.71732, 0.6083, 1)
+Button/colors/font_pressed_color = Color(0.79, 0.71732, 0.6083, 1)
+Button/styles/focus = SubResource("StyleBoxFlat_vk1wc")
+Button/styles/hover = SubResource("StyleBoxFlat_gttji")
+Button/styles/normal = SubResource("StyleBoxFlat_kumq8")
+Button/styles/pressed = SubResource("StyleBoxFlat_jhqhc")
+Label/colors/font_color = Color(1, 0.919333, 0.78, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 1)
+Label/constants/shadow_offset_x = 2
+Label/constants/shadow_offset_y = 2
+LineEdit/styles/focus = SubResource("StyleBoxFlat_qkpn8")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_rgm6y")
+TextEdit/colors/font_color = Color(1, 0.944, 0.86, 1)
+TextEdit/styles/focus = SubResource("StyleBoxFlat_t0bju")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_i1vcn")

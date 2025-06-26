@@ -1,12 +1,68 @@
-[gd_scene load_steps=3 format=3 uid="uid://dr51tbfkx717c"]
+[gd_scene load_steps=20 format=3 uid="uid://dr51tbfkx717c"]
 
 [ext_resource type="Script" uid="uid://d2111een8gbv6" path="res://node.gd" id="1_sy5k4"]
+[ext_resource type="FontFile" uid="uid://b5ks1v8rjnc2w" path="res://assets/Pattaya-Regular.ttf" id="2_112p8"]
+[ext_resource type="Texture2D" uid="uid://cwxojq32b2wjp" path="res://assets/texture.jpg" id="2_e2u21"]
+[ext_resource type="Theme" uid="uid://lkqqoe1065ty" path="res://assets/theme1_alt.tres" id="2_j2q8x"]
+[ext_resource type="PackedScene" uid="uid://cuopmjs5h2k5s" path="res://context_menu/ctx_menu_button.tscn" id="4_bss38"]
+[ext_resource type="PackedScene" uid="uid://dxy441okudh0i" path="res://context_menu/context_exit.tscn" id="6_tda05"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_e2u21"]
+blend_mode = 3
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sy5k4"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e2u21"]
+bg_color = Color(0.7, 0.4984, 0.252, 1)
+corner_radius_top_left = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bss38"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.517647)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tda05"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qn3nj"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.517647)
+
+[sub_resource type="Theme" id="Theme_l6pdb"]
+Button/styles/normal = SubResource("StyleBoxFlat_e2u21")
+Label/colors/font_color = Color(1, 0.876, 0.69, 1)
+LineEdit/styles/normal = SubResource("StyleBoxFlat_bss38")
+TextEdit/colors/font_color = Color(1, 0.944, 0.86, 1)
+TextEdit/styles/focus = SubResource("StyleBoxFlat_tda05")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_qn3nj")
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_sy5k4"]
+color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l6pdb"]
+bg_color = Color(0.7, 0.605267, 0.294, 1)
+corner_radius_bottom_right = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r657h"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.517647)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f0urt"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jfkdj"]
+bg_color = Color(0.075, 0.0929167, 0.1, 0.262745)
+
+[sub_resource type="Theme" id="Theme_wt6go"]
+Button/styles/normal = SubResource("StyleBoxFlat_l6pdb")
+Label/colors/font_color = Color(1, 0.876, 0.69, 1)
+LineEdit/styles/normal = SubResource("StyleBoxFlat_r657h")
+TextEdit/colors/font_color = Color(1, 0.944, 0.86, 1)
+TextEdit/styles/focus = SubResource("StyleBoxFlat_f0urt")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_jfkdj")
+
 [node name="Node" type="Node"]
 script = ExtResource("1_sy5k4")
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
+unique_name_in_owner = true
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 3
@@ -23,7 +79,35 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.329449, 0.240243, 0.133729, 1)
+color = Color(0.152, 0.38, 0.3268, 1)
+
+[node name="TextureRect" type="TextureRect" parent="Control"]
+material = SubResource("CanvasItemMaterial_e2u21")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 2685.0
+offset_bottom = 3716.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.21, 0.21)
+texture = ExtResource("2_e2u21")
+
+[node name="Button" type="Button" parent="Control"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.82963
+anchor_right = 0.17037
+anchor_bottom = 1.0
+offset_left = 468.0
+offset_top = 14.0
+offset_right = -15.0
+offset_bottom = -906.0
+grow_horizontal = 0
+pivot_offset = Vector2(26, 26)
+text = "scan"
+metadata/_edit_use_anchors_ = true
 
 [node name="MarginContainer" type="MarginContainer" parent="Control"]
 layout_mode = 1
@@ -32,67 +116,158 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 50
-theme_override_constants/margin_top = 50
-theme_override_constants/margin_right = 50
-theme_override_constants/margin_bottom = 80
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 50
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Control/MarginContainer"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
-alignment = 1
-
-[node name="Label" type="Label" parent="Control/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "LocalFetch"
-horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="Control/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 40
 theme_override_styles/separator = SubResource("StyleBoxFlat_sy5k4")
 
-[node name="IPPort" type="LineEdit" parent="Control/MarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="Control/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.876, 0.69, 1)
+theme_override_fonts/font = ExtResource("2_112p8")
+theme_override_font_sizes/font_size = 50
+text = "LocalFetch"
+horizontal_alignment = 1
+
+[node name="HSeparator2" type="HSeparator" parent="Control/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+theme_override_styles/separator = SubResource("StyleBoxFlat_sy5k4")
+
+[node name="GridContainer" type="GridContainer" parent="Control/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 15
+columns = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_vertical = 6
+
+[node name="Label" type="Label" parent="Control/MarginContainer/VBoxContainer/GridContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "IP:Port"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="IPPort" type="LineEdit" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer2"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+size_flags_horizontal = 3
 placeholder_text = "e.g. 192.168.1.186:8000"
 
-[node name="TextInput" type="TextEdit" parent="Control/MarginContainer/VBoxContainer"]
+[node name="CtxMenuBtn" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer2" instance=ExtResource("4_bss38")]
+layout_mode = 2
+ctx_button_types = Array[int]([1, 2, 0])
+
+[node name="MarginContainer2" type="MarginContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 6
+
+[node name="Label2" type="Label" parent="Control/MarginContainer/VBoxContainer/GridContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "text to
+send"
+horizontal_alignment = 1
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextInput" type="TextEdit" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer3"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-placeholder_text = "text to send"
+size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Control/MarginContainer/VBoxContainer"]
+[node name="CtxMenuBtn" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer3" instance=ExtResource("4_bss38")]
+layout_mode = 2
+ctx_button_types = Array[int]([1, 2, 0])
+
+[node name="MarginContainer7" type="MarginContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 6
+
+[node name="Label2" type="Label" parent="Control/MarginContainer/VBoxContainer/GridContainer/MarginContainer7"]
+layout_mode = 2
+size_flags_vertical = 0
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 2
+
+[node name="SendButton" type="Button" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("2_j2q8x")
+theme_override_font_sizes/font_size = 15
+text = "  Send text  "
+
+[node name="ReceiveButton" type="Button" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme = SubResource("Theme_l6pdb")
+theme_override_font_sizes/font_size = 15
+text = "  Receive Text  "
+
+[node name="MarginContainer5" type="MarginContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_vertical = 2
+theme_override_constants/margin_top = 6
+
+[node name="Label3" type="Label" parent="Control/MarginContainer/VBoxContainer/GridContainer/MarginContainer5"]
+layout_mode = 2
+text = "received
+text"
+horizontal_alignment = 1
+
+[node name="HBoxContainer4" type="HBoxContainer" parent="Control/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextOutput" type="TextEdit" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer4"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CtxMenuBtn2" parent="Control/MarginContainer/VBoxContainer/GridContainer/HBoxContainer4" instance=ExtResource("4_bss38")]
+layout_mode = 2
+ctx_button_types = Array[int]([1, 2, 0])
+
+[node name="HSeparator3" type="HSeparator" parent="Control/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
-
-[node name="SendButton" type="Button" parent="Control/MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Send text"
-
-[node name="ReceiveButton" type="Button" parent="Control/MarginContainer/VBoxContainer/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Receive Text"
-
-[node name="TextOutput" type="TextEdit" parent="Control/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-placeholder_text = "output"
+theme_override_styles/separator = SubResource("StyleBoxLine_sy5k4")
 
 [node name="TextStatus" type="TextEdit" parent="Control/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-placeholder_text = "status"
+size_flags_vertical = 3
+theme = SubResource("Theme_wt6go")
 
 [node name="Label" type="Label" parent="Control"]
 layout_mode = 1
@@ -102,13 +277,17 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -220.0
-offset_top = -67.0
+offset_top = -37.0
 offset_right = 220.0
 grow_horizontal = 2
 grow_vertical = 0
 size_flags_vertical = 8
+theme_override_colors/font_color = Color(1, 0.909, 0.79, 0.67451)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
 text = "Made by @Kyrovert"
 horizontal_alignment = 1
 
-[node name="HTTPRequest" type="HTTPRequest" parent="."]
+[node name="ContextExit" parent="Control" instance=ExtResource("6_tda05")]
 unique_name_in_owner = true
+visible = false
+layout_mode = 1

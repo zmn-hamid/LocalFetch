@@ -1,0 +1,11 @@
+[gd_scene load_steps=4 format=3 uid="uid://cuopmjs5h2k5s"]
+
+[ext_resource type="Script" uid="uid://bdolpdgcxxqmj" path="res://context_menu/ctx_menu_button.gd" id="1_a33pu"]
+[ext_resource type="PackedScene" uid="uid://cal6afbigojtd" path="res://context_menu/context_menu.tscn" id="2_4dr2j"]
+[ext_resource type="PackedScene" uid="uid://bnqn87tiynp7b" path="res://context_menu/ctx_button.tscn" id="2_i62su"]
+
+[node name="CtxMenuBtn" type="Button"]
+text = " > "
+script = ExtResource("1_a33pu")
+ctx_menu_packed = ExtResource("2_4dr2j")
+ctx_button_packed = ExtResource("2_i62su")

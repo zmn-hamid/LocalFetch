@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://cal6afbigojtd"]
+
+[ext_resource type="Script" uid="uid://blkwqolsp3lw5" path="res://context_menu/context_menu.gd" id="1_8eruf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c2omt"]
+bg_color = Color(0, 0, 0, 0.65098)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.94, 0.82, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[node name="ContextMenu" type="Panel"]
+anchors_preset = -1
+anchor_right = 0.389
+anchor_bottom = 0.157
+offset_right = -0.0600128
+offset_bottom = -0.404999
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_c2omt")
+script = ExtResource("1_8eruf")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
