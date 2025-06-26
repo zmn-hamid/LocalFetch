@@ -1,22 +1,170 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, messagebox
 import threading
 import socket
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import queue
 import time
-import qrcode  # For QR code generation
-from PIL import Image, ImageTk  # For displaying QR code in Tkinter
-import io  # For handling image data in memory
+import qrcode
+from PIL import Image, ImageTk
+import io
+import os
+import sys
+import subprocess
 
 # --- Configuration ---
-DEFAULT_HOST_NAME = "0.0.0.0"  # Listen on all available network interfaces
+DEFAULT_HOST_NAME = "0.0.0.0"
 DEFAULT_PORT_NUMBER = 8000
 # ---------------------
 
 app_instance_ref = None
 
 
+# =============================================================================
+# UI Configuration and Theme Management
+# =============================================================================
+class Config:
+    FONT_FAMILY = "Segoe UI"
+    FONT_SIZE_NORMAL = 10
+    FONT_SIZE_SMALL = 9
+    FONT_SIZE_HEADER = 14
+    PAD_X = 10
+    PAD_Y = 5
+
+
+class Theme:
+    """
+    Manages color themes for the application.
+    Now loads and saves the selected theme from/to a configuration file.
+    """
+
+    CONFIG_FILE = "theme.cfg"  # The file to store the theme setting
+
+    def __init__(self):
+        self.themes = self.themes = {
+            "LocalFetch Dark": {
+                "BG": "#2B2623",
+                "FG": "#D4C9B5",
+                "FRAME_BG": "#3C362D",
+                "INPUT_BG": "#3D322B",
+                "ACCENT": "#7F6636",
+                "ACCENT_FG": "#2A211C",
+                "SUCCESS": "#879A39",
+                "ERROR": "#D75F5F",
+                "DISABLED_FG": "#85786B",
+            },
+            "Darcula": {
+                "BG": "#282A36",
+                "FG": "#E3E7EE",
+                "FRAME_BG": "#44475A",
+                "INPUT_BG": "#313335",
+                "ACCENT": "#6272A4",
+                "ACCENT_FG": "#F8F8F2",
+                "SUCCESS": "#FF79C6",
+                "ERROR": "#FF5555",
+                "DISABLED_FG": "#808080",
+            },
+            "Monokai": {
+                "BG": "#272822",
+                "FG": "#F8F8F2",
+                "FRAME_BG": "#272822",
+                "INPUT_BG": "#3E3D32",
+                "ACCENT": "#FF6188",
+                "ACCENT_FG": "#272822",
+                "SUCCESS": "#A9DC76",
+                "ERROR": "#F92672",
+                "DISABLED_FG": "#75715E",
+            },
+            "Solarized Dark": {
+                "BG": "#002b36",
+                "FG": "#93a1a1",
+                "FRAME_BG": "#073642",
+                "INPUT_BG": "#586e75",
+                "ACCENT": "#d3  3682",
+                "ACCENT_FG": "#fdf6e3",
+                "SUCCESS": "#859900",
+                "ERROR": "#dc322f",
+                "DISABLED_FG": "#586e75",
+            },
+            "Solarized Light": {
+                "BG": "#fdf6e3",
+                "FG": "#073642",
+                "FRAME_BG": "#eee8d5",
+                "INPUT_BG": "#eee8d5",
+                "ACCENT": "#268bd2",
+                "ACCENT_FG": "#fdf6e3",
+                "SUCCESS": "#859900",
+                "ERROR": "#dc322f",
+                "DISABLED_FG": "#93a1a1",
+            },
+            "GitHub Light": {
+                "BG": "#FFFFFF",
+                "FG": "#24292E",
+                "FRAME_BG": "#F6F8FA",
+                "INPUT_BG": "#FAFBFC",
+                "ACCENT": "#0366D6",
+                "ACCENT_FG": "#FFFFFF",
+                "SUCCESS": "#28A745",
+                "ERROR": "#D73A49",
+                "DISABLED_FG": "#586069",
+            },
+            "Default Light": {
+                "BG": "#F0F0F0",
+                "FG": "#000000",
+                "FRAME_BG": "#FFFFFF",
+                "INPUT_BG": "#EAEAEA",
+                "ACCENT": "#0078D7",
+                "ACCENT_FG": "#FFFFFF",
+                "SUCCESS": "#107C10",
+                "ERROR": "#D32F2F",
+                "DISABLED_FG": "#666666",
+            },
+            "Oceanic": {
+                "BG": "#F2F9FF",
+                "FG": "#003B5C",
+                "FRAME_BG": "#E0F2FF",
+                "INPUT_BG": "#FFFFFF",
+                "ACCENT": "#008CBA",
+                "ACCENT_FG": "#FFFFFF",
+                "SUCCESS": "#4CAF50",
+                "ERROR": "#F44336",
+                "DISABLED_FG": "#547B94",
+            },
+        }
+        self.current_theme_name = self._load_theme_from_file()
+        self.current = self.themes[self.current_theme_name]
+
+    def _load_theme_from_file(self):
+        """Tries to read the theme name from the config file."""
+        try:
+            with open(self.CONFIG_FILE, "r") as f:
+                theme_name = f.read().strip()
+            if theme_name in self.themes:
+                print(f"Theme loaded from file: {theme_name}")
+                return theme_name
+        except FileNotFoundError:
+            print("Theme file not found, using default.")
+        except Exception as e:
+            print(f"Warning: Could not read theme file '{self.CONFIG_FILE}': {e}")
+
+        return "LocalFetch Dark"  # Default theme
+
+    def save_theme_to_file(self, theme_name):
+        """Saves the selected theme name to the config file."""
+        try:
+            with open(self.CONFIG_FILE, "w") as f:
+                f.write(theme_name)
+            print(f"Theme '{theme_name}' saved to file.")
+        except Exception as e:
+            messagebox.showerror(
+                "Theme Save Error",
+                f"Could not save theme to '{self.CONFIG_FILE}':\n{e}",
+            )
+
+
+# =============================================================================
+# Server Handler
+# =============================================================================
 class LocalFetchHandler(BaseHTTPRequestHandler):
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -113,34 +261,323 @@ class LocalFetchHandler(BaseHTTPRequestHandler):
             )
 
 
+# =============================================================================
+# Main Application Class
+# =============================================================================
 class LocalFetchServerApp:
-    def __init__(self, root_window):
-        self.root = root_window
-        self.root.title("Local Fetch Server")
-        self.root.geometry("750x550")
-
+    def __init__(self, root_window: tk.Tk):
+        # --- Core App State ---
+        self.root: tk.Tk = root_window
         self.shared_text_data = "Hello from the Python server GUI!"
         self.server_thread = None
         self.httpd = None
-        self.running_port = (
-            DEFAULT_PORT_NUMBER  # Set default, confirmed by start_server
-        )
+        self.running_port = DEFAULT_PORT_NUMBER
         self.preferred_ip = "N/A"
         self.all_ips = []
-
         self.gui_queue = queue.Queue()
         self.qr_image_tk = None
 
+        # --- UI Styling ---
+        self.config = Config()
+        self.theme = Theme()
+
+        # --- Setup ---
+        self._configure_root_window()
+        self._apply_theme()
         self._setup_gui()
         self.update_shared_text_display()
+
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         self._process_gui_queue()
-        self._update_ip_info()  # Initial IP fetch for display
+        self._update_ip_info()
+        self.start_server()
 
-        self.start_server()  # Start server automatically
+    def _configure_root_window(self):
+        self.root.title("Local Fetch Server")
+        self.root.geometry("800x650")
+        self.root.minsize(750, 600)
+        self.root.iconphoto(
+            True,
+            tk.PhotoImage(file=os.path.abspath(".").join(("Logo1.png",))),
+        )
+        self.root.configure(bg=self.theme.current["BG"])
 
+        # Configure grid layout
+        self.root.grid_rowconfigure(1, weight=1)  # Main content area row
+        self.root.grid_rowconfigure(2, weight=1)  # Log area row
+        self.root.grid_columnconfigure(0, weight=3)  # Left column (main content)
+        self.root.grid_columnconfigure(1, weight=2)  # Right column (server info)
+
+    def _apply_theme(self):
+        """Configures ttk styles based on the selected theme."""
+        style = ttk.Style()
+        style.theme_use("clam")  # A good base theme to build on
+
+        theme = self.theme.current
+        font_normal = (self.config.FONT_FAMILY, self.config.FONT_SIZE_NORMAL)
+        font_small = (self.config.FONT_FAMILY, self.config.FONT_SIZE_SMALL)
+
+        # General widget styling
+        style.configure(
+            ".", background=theme["BG"], foreground=theme["FG"], font=font_normal
+        )
+        style.configure("TFrame", background=theme["BG"])
+        style.configure("TLabel", background=theme["BG"], foreground=theme["FG"])
+        style.configure(
+            "TEntry",
+            fieldbackground=theme["INPUT_BG"],
+            foreground=theme["FG"],
+            insertcolor=theme["FG"],
+        )
+        style.configure(
+            "TCombobox", fieldbackground=theme["INPUT_BG"], foreground=theme["FG"]
+        )
+
+        # Button styling
+        style.configure(
+            "TButton",
+            background=theme["FRAME_BG"],
+            foreground=theme["FG"],
+            font=font_normal,
+        )
+        style.map("TButton", background=[("active", theme["ACCENT"])])
+
+        # Accent button style (for primary actions)
+        style.configure(
+            "Accent.TButton",
+            background=theme["ACCENT"],
+            foreground=theme["ACCENT_FG"],
+            font=font_normal,
+        )
+        style.map(
+            "Accent.TButton",
+            background=[("active", theme["BG"]), ("pressed", theme["ACCENT"])],
+        )
+
+        # LabelFrame styling
+        style.configure(
+            "TLabelframe", background=theme["BG"], bordercolor=theme["DISABLED_FG"]
+        )
+        style.configure(
+            "TLabelframe.Label", background=theme["BG"], foreground=theme["FG"]
+        )
+
+    def _setup_gui(self):
+        """Creates and places all GUI elements using a grid layout."""
+        self._create_header_frame()
+        self._create_shared_text_frame()
+        self._create_log_frame()
+        self._create_server_info_frame()
+
+    def _create_header_frame(self):
+        header_frame = ttk.Frame(self.root, padding=self.config.PAD_X)
+        header_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+        title_label = ttk.Label(
+            header_frame,
+            text="Local Fetch Server",
+            font=(self.config.FONT_FAMILY, self.config.FONT_SIZE_HEADER, "bold"),
+        )
+        title_label.pack(side=tk.LEFT)
+
+        # --- Theme Switcher ---
+        theme_frame = ttk.Frame(header_frame)
+        theme_frame.pack(side=tk.RIGHT)
+
+        ttk.Label(theme_frame, text="Theme:").pack(side=tk.LEFT, padx=(0, 5))
+        self.theme_selector = ttk.Combobox(
+            theme_frame,
+            values=list(self.theme.themes.keys()),
+            width=20,
+            state="readonly",
+            background=self.theme.current["BG"],
+            foreground=self.theme.current["FG"],
+        )
+        self.theme_selector.set(self.theme.current_theme_name)
+        self.theme_selector.bind("<<ComboboxSelected>>", self._change_theme)
+        self.theme_selector.pack(side=tk.LEFT)
+
+    def _create_shared_text_frame(self):
+        shared_text_frame = ttk.LabelFrame(
+            self.root,
+            text="Shared Text",
+            padding=(self.config.PAD_X, self.config.PAD_Y),
+        )
+        shared_text_frame.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=self.config.PAD_X,
+            pady=self.config.PAD_Y,
+        )
+        shared_text_frame.grid_rowconfigure(0, weight=1)
+        shared_text_frame.grid_columnconfigure(0, weight=1)
+
+        self.shared_text_display = scrolledtext.ScrolledText(
+            shared_text_frame,
+            height=5,
+            wrap=tk.WORD,
+            state=tk.DISABLED,
+            bg=self.theme.current["INPUT_BG"],
+            fg=self.theme.current["FG"],
+            font=(self.config.FONT_FAMILY, self.config.FONT_SIZE_NORMAL),
+            relief=tk.FLAT,
+            borderwidth=2,
+        )
+        self.shared_text_display.grid(
+            row=0, column=0, columnspan=2, sticky="nsew", pady=(0, self.config.PAD_Y)
+        )
+
+        self.gui_text_input = ttk.Entry(
+            shared_text_frame,
+            width=50,
+            font=(self.config.FONT_FAMILY, self.config.FONT_SIZE_NORMAL),
+        )
+        self.gui_text_input.grid(
+            row=1, column=0, sticky="ew", padx=(0, self.config.PAD_X)
+        )
+
+        self.update_text_button = ttk.Button(
+            shared_text_frame,
+            text="Update from GUI",
+            command=self.update_shared_text_from_gui,
+            style="Accent.TButton",
+        )
+        self.update_text_button.grid(row=1, column=1, sticky="e")
+
+    def _create_log_frame(self):
+        log_frame = ttk.LabelFrame(
+            self.root, text="Server Log", padding=(self.config.PAD_X, self.config.PAD_Y)
+        )
+        log_frame.grid(
+            row=2,
+            column=0,
+            columnspan=2,
+            sticky="nsew",
+            padx=self.config.PAD_X,
+            pady=(0, self.config.PAD_Y),
+        )
+        log_frame.grid_rowconfigure(0, weight=1)
+        log_frame.grid_columnconfigure(0, weight=1)
+
+        self.log_area = scrolledtext.ScrolledText(
+            log_frame,
+            height=8,
+            wrap=tk.WORD,
+            state=tk.DISABLED,
+            bg=self.theme.current["FRAME_BG"],
+            fg=self.theme.current["DISABLED_FG"],
+            font=(self.config.FONT_FAMILY, self.config.FONT_SIZE_SMALL),
+            relief=tk.FLAT,
+            borderwidth=2,
+        )
+        self.log_area.grid(row=0, column=0, sticky="nsew")
+
+    def _create_server_info_frame(self):
+        info_frame = ttk.LabelFrame(
+            self.root,
+            text="Server Information",
+            padding=(self.config.PAD_X, self.config.PAD_Y),
+        )
+        info_frame.grid(
+            row=1,
+            column=1,
+            rowspan=1,
+            sticky="nsew",
+            padx=(0, self.config.PAD_X),
+            pady=self.config.PAD_Y,
+        )
+        info_frame.grid_columnconfigure(1, weight=1)
+
+        # Status Label
+        self.status_label = ttk.Label(
+            info_frame,
+            text="Initializing...",
+            font=(self.config.FONT_FAMILY, 12, "bold"),
+        )
+        self.status_label.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
+
+        # IP/Port Display
+        ttk.Label(info_frame, text="Address:").grid(row=1, column=0, sticky="w")
+        self.ip_display_var = tk.StringVar(value="N/A")
+        self.ip_display_entry = ttk.Entry(
+            info_frame, textvariable=self.ip_display_var, state="readonly", width=20
+        )
+        self.ip_display_entry.grid(row=1, column=1, sticky="ew", padx=(5, 0))
+
+        ttk.Label(info_frame, text="Port:").grid(
+            row=2, column=0, sticky="w", pady=(self.config.PAD_Y, 0)
+        )
+        self.port_display_var = tk.StringVar(value=str(DEFAULT_PORT_NUMBER))
+        self.port_entry = ttk.Entry(
+            info_frame, textvariable=self.port_display_var, state="readonly", width=20
+        )
+        self.port_entry.grid(
+            row=2, column=1, sticky="ew", padx=(5, 0), pady=(self.config.PAD_Y, 0)
+        )
+
+        # Action Buttons
+        button_frame = ttk.Frame(info_frame)
+        button_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 15))
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
+
+        self.copy_ip_button = ttk.Button(
+            button_frame, text="Copy Address", command=self._copy_ip
+        )
+        self.copy_ip_button.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+        self.refresh_ip_button = ttk.Button(
+            button_frame, text="Refresh IPs", command=self._update_ip_info
+        )
+        self.refresh_ip_button.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+
+        # Other IPs
+        self.all_ips_label = ttk.Label(
+            info_frame,
+            text="Other IPs: (loading...)",
+            wraplength=250,
+            justify=tk.LEFT,
+            foreground=self.theme.current["DISABLED_FG"],
+            font=(self.config.FONT_FAMILY, self.config.FONT_SIZE_SMALL),
+        )
+        self.all_ips_label.grid(row=4, column=0, columnspan=2, sticky="w", pady=(0, 15))
+
+        # QR Code
+        self.qr_label = ttk.Label(
+            info_frame,
+            text="QR will appear here",
+            relief=tk.SOLID,
+            anchor=tk.CENTER,
+            borderwidth=1,
+            background=self.theme.current["FRAME_BG"],
+        )
+        self.qr_label.grid(row=5, column=0, columnspan=2, sticky="nsew", ipady=10)
+        info_frame.grid_rowconfigure(5, weight=1)
+
+    # --- THEME MANAGEMENT ---
+    def _change_theme(self, event=None):
+        """
+        Handles theme selection. Saves the new theme and prompts the user to restart.
+        """
+        selected_theme = self.theme_selector.get()
+        if selected_theme == self.theme.current_theme_name:
+            return  # Do nothing if the theme hasn't changed
+
+        # Save the new theme choice to the configuration file.
+        self.theme.save_theme_to_file(selected_theme)
+
+        # Inform the user that a restart is required.
+        messagebox.showinfo(
+            "Restart Required",
+            f"Theme has been set to '{selected_theme}'.\nPlease restart the application for the changes to take effect.",
+        )
+
+        # Gracefully shut down the server and close the application.
+        self.stop_server()
+        self.root.destroy()
+
+    # --- BACKEND LOGIC ---
     def _get_local_ips(self):
-        """Gets all non-loopback IPv4 addresses and prioritizes 192.168.x.x."""
         ips = []
         preferred = None
         try:
@@ -178,42 +615,34 @@ class LocalFetchServerApp:
 
     def _update_ip_info(self):
         self.preferred_ip, self.all_ips = self._get_local_ips()
-        self.ip_display_var.set(self.preferred_ip if self.preferred_ip else "N/A")
 
-        if hasattr(self, "all_ips_label"):  # Check if GUI is setup
-            other_ips_list = [ip for ip in self.all_ips if ip != self.preferred_ip]
-            self.all_ips_label.config(
-                text=(
-                    f"Other IPs: {', '.join(other_ips_list)}"
-                    if other_ips_list
-                    else "Other IPs: None found"
-                )
-            )
+        status_update = {
+            "ip": self.preferred_ip,
+            "all_ips": self.all_ips,
+        }
+        self.gui_queue.put({"type": "ip_update", "content": status_update})
 
-        if self.httpd:  # Check if server is actually running
+        if self.httpd:
             self._generate_and_display_qr_code()
 
     def _copy_ip(self):
-        ip_to_copy = self.ip_display_var.get()
-        if ip_to_copy and ip_to_copy != "N/A":
-            if self.httpd:  # Only copy if server is confirmed running
-                full_address = f"{ip_to_copy}:{self.running_port}"
-                self.root.clipboard_clear()
-                self.root.clipboard_append(full_address)
-                self.log_to_gui(f"Copied '{full_address}' to clipboard.")
-            else:
-                self.log_to_gui("Cannot copy address: Server is not running.")
+        if self.preferred_ip and self.preferred_ip != "N/A" and self.httpd:
+            full_address = f"{self.preferred_ip}:{self.running_port}"
+            self.root.clipboard_clear()
+            self.root.clipboard_append(full_address)
+            self.log_to_gui(f"Copied '{full_address}' to clipboard.")
         else:
-            self.log_to_gui("No valid IP to copy.")
+            self.log_to_gui(
+                "Cannot copy address: Server is not running or IP is invalid."
+            )
 
     def _generate_and_display_qr_code(self):
         if self.preferred_ip != "N/A" and self.httpd:
             server_address_for_qr = f"{self.preferred_ip}:{self.running_port}"
-
             qr = qrcode.QRCode(
                 version=1,
                 error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=4,
+                box_size=6,
                 border=2,
             )
             qr.add_data(server_address_for_qr)
@@ -223,113 +652,24 @@ class LocalFetchServerApp:
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format="PNG")
             img_byte_arr.seek(0)
+            pil_image = Image.open(img_byte_arr)
 
-            pil_image_for_tk = Image.open(img_byte_arr)
-            self.qr_image_tk = ImageTk.PhotoImage(pil_image_for_tk)
+            # Resize image to fit the label if it's too big
+            label_width = self.qr_label.winfo_width()
+            if label_width > 10 and pil_image.width > label_width:
+                wpercent = label_width / float(pil_image.size[0])
+                hsize = int((float(pil_image.size[1]) * float(wpercent)))
+                pil_image = pil_image.resize(
+                    (label_width, hsize), Image.Resampling.LANCZOS
+                )
 
-            self.qr_label.config(
-                image=self.qr_image_tk,
-                width=pil_image_for_tk.width,
-                height=pil_image_for_tk.height,
-            )
+            self.qr_image_tk = ImageTk.PhotoImage(pil_image)
+            self.qr_label.config(image=self.qr_image_tk)
             self.qr_label.image = self.qr_image_tk
             self.log_to_gui(f"QR code updated for: {server_address_for_qr}")
         else:
-            if hasattr(self, "qr_label") and self.qr_label:
-                self.qr_label.config(image="")
-                self.qr_label.image = None
-            # self.log_to_gui("QR code cleared (server not running or no IP).") # Can be noisy
-
-    def _setup_gui(self):
-        top_frame = tk.Frame(self.root)
-        top_frame.pack(fill=tk.X, padx=10, pady=5)
-
-        controls_frame = tk.Frame(top_frame)
-        controls_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-        server_control_frame = tk.Frame(controls_frame, pady=5)
-        server_control_frame.pack(fill=tk.X)
-        tk.Label(server_control_frame, text="Port:").pack(side=tk.LEFT, padx=(0, 5))
-
-        self.port_display_var = tk.StringVar(value=str(DEFAULT_PORT_NUMBER))
-        self.port_entry = tk.Entry(
-            server_control_frame,
-            textvariable=self.port_display_var,
-            width=6,
-            state="readonly",
-        )
-        self.port_entry.pack(side=tk.LEFT, padx=5)
-
-        ip_frame = tk.Frame(controls_frame, pady=5)
-        ip_frame.pack(fill=tk.X)
-        tk.Label(ip_frame, text="Server IP:").pack(side=tk.LEFT, padx=(0, 5))
-        self.ip_display_var = tk.StringVar(value="N/A")
-        self.ip_display_entry = tk.Entry(
-            ip_frame, textvariable=self.ip_display_var, state="readonly", width=15
-        )
-        self.ip_display_entry.pack(side=tk.LEFT, padx=5)
-        self.copy_ip_button = tk.Button(  # Renamed button
-            ip_frame, text="Copy Addr", command=self._copy_ip, width=10
-        )
-        self.copy_ip_button.pack(side=tk.LEFT, padx=5)
-        self.refresh_ip_button = tk.Button(
-            ip_frame, text="Refresh IPs", command=self._update_ip_info, width=10
-        )
-        self.refresh_ip_button.pack(side=tk.LEFT, padx=5)
-
-        self.status_label = tk.Label(
-            controls_frame,
-            text="Initializing Server...",
-            fg="orange",
-            pady=2,
-            anchor="w",
-        )
-        self.status_label.pack(fill=tk.X)
-        self.all_ips_label = tk.Label(
-            controls_frame,
-            text="Other available IPs will be listed here.",
-            fg="gray",
-            pady=2,
-            anchor="w",
-            wraplength=450,
-            justify=tk.LEFT,
-        )
-        self.all_ips_label.pack(fill=tk.X)
-
-        self.qr_label = tk.Label(
-            top_frame,
-            text="QR will appear here\nwhen server starts",
-            relief=tk.SUNKEN,
-            width=18,
-            height=9,
-        )
-        self.qr_label.pack(side=tk.RIGHT, padx=(10, 0))
-
-        shared_text_frame = tk.LabelFrame(
-            self.root, text="Current Shared Text", padx=10, pady=10
-        )
-        shared_text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        self.shared_text_display = scrolledtext.ScrolledText(
-            shared_text_frame, height=5, wrap=tk.WORD, state=tk.DISABLED
-        )
-        self.shared_text_display.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
-        update_text_subframe = tk.Frame(shared_text_frame)
-        update_text_subframe.pack(fill=tk.X)
-        self.gui_text_input = tk.Entry(update_text_subframe, width=50)
-        self.gui_text_input.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 5))
-        self.update_text_button = tk.Button(
-            update_text_subframe,
-            text="Update Text (from GUI)",
-            command=self.update_shared_text_from_gui,
-        )
-        self.update_text_button.pack(side=tk.LEFT)
-
-        log_frame = tk.LabelFrame(self.root, text="Server Log", padx=10, pady=10)
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        self.log_area = scrolledtext.ScrolledText(
-            log_frame, height=8, wrap=tk.WORD, state=tk.DISABLED
-        )
-        self.log_area.pack(fill=tk.BOTH, expand=True)
+            self.qr_label.config(image="", text="Server Offline")
+            self.qr_label.image = None
 
     def log_to_gui(self, message):
         self.gui_queue.put({"type": "log", "content": message})
@@ -339,14 +679,19 @@ class LocalFetchServerApp:
 
     def update_shared_text(self, new_text, from_client=False):
         self.shared_text_data = new_text
-        source = "Client" if from_client else "GUI Admin"
-        log_msg = f"{source} updated shared text: '{new_text}'"
+        source = "Client" if from_client else "GUI"
+        log_msg = (
+            f"{source} updated text to: '{new_text[:50]}...'"
+            if len(new_text) > 50
+            else f"{source} updated text to: '{new_text}'"
+        )
         self.gui_queue.put({"type": "shared_text_update", "content": log_msg})
 
     def update_shared_text_from_gui(self):
         new_text = self.gui_text_input.get()
-        self.gui_text_input.delete(0, tk.END)
-        self.update_shared_text(new_text, from_client=False)
+        if new_text:  # Only update if there is text
+            self.gui_text_input.delete(0, tk.END)
+            self.update_shared_text(new_text, from_client=False)
 
     def update_shared_text_display(self):
         self.shared_text_display.config(state=tk.NORMAL)
@@ -357,9 +702,8 @@ class LocalFetchServerApp:
     def _process_gui_queue(self):
         try:
             while True:
-                message_item = self.gui_queue.get_nowait()
-                msg_type = message_item.get("type")
-                content = message_item.get("content")
+                item = self.gui_queue.get_nowait()
+                msg_type, content = item.get("type"), item.get("content")
 
                 if msg_type == "log":
                     self._append_to_log_area(content)
@@ -368,39 +712,18 @@ class LocalFetchServerApp:
                     self._append_to_log_area(content)
                 elif msg_type == "server_status":
                     self.status_label.config(
-                        text=content.get("text"), fg=content.get("color")
+                        text=content.get("text"), foreground=content.get("color")
                     )
-                    if "ip" in content:
-                        self.ip_display_var.set(
-                            content["ip"] if content["ip"] else "N/A"
-                        )
+                elif msg_type == "ip_update":
+                    self.preferred_ip = content.get("ip", "N/A")
+                    self.all_ips = content.get("all_ips", [])
+                    self.ip_display_var.set(f"{self.preferred_ip}")
 
-                    if (
-                        "all_ips" in content and "ip" in content
-                    ):  # Ensure primary IP is also there for comparison
-                        other_ips_list = [
-                            ip for ip in content["all_ips"] if ip != content.get("ip")
-                        ]
-                        self.all_ips_label.config(
-                            text=(
-                                f"Other IPs: {', '.join(other_ips_list)}"
-                                if other_ips_list
-                                else "Other IPs: None found"
-                            )
-                        )
-                    elif (
-                        "all_ips" in content
-                    ):  # Fallback if primary IP not in content but all_ips is
-                        self.all_ips_label.config(
-                            text=f"Other IPs: {', '.join(content['all_ips'])}"
-                        )
+                    other_ips = [ip for ip in self.all_ips if ip != self.preferred_ip]
+                    self.all_ips_label.config(
+                        text=f"Other IPs: {', '.join(other_ips) if other_ips else 'None found'}"
+                    )
 
-                    if self.httpd:
-                        self._generate_and_display_qr_code()
-                    else:
-                        if hasattr(self, "qr_label") and self.qr_label:
-                            self.qr_label.config(image="")
-                            self.qr_label.image = None
         except queue.Empty:
             pass
         self.root.after(100, self._process_gui_queue)
@@ -414,37 +737,28 @@ class LocalFetchServerApp:
 
     def start_server(self):
         self.running_port = DEFAULT_PORT_NUMBER
-        self.port_display_var.set(str(self.running_port))  # Ensure display is correct
+        self.port_display_var.set(str(self.running_port))
 
-        server_address = (DEFAULT_HOST_NAME, self.running_port)
         try:
             global app_instance_ref
             app_instance_ref = self
-            self.httpd = HTTPServer(server_address, LocalFetchHandler)
+            self.httpd = HTTPServer(
+                (DEFAULT_HOST_NAME, self.running_port), LocalFetchHandler
+            )
         except OSError as e:
             messagebox.showerror(
                 "Server Error",
-                f"Failed to start server on port {self.running_port}: {e}\n(Port might be in use or IP binding issue)",
+                f"Failed to start server on port {self.running_port}: {e}",
             )
-            self.gui_queue.put(
-                {
-                    "type": "log",
-                    "content": f"Failed to start server on port {self.running_port}: {e}",
-                }
+            self.log_to_gui(
+                f"FATAL: Server failed to start. Port {self.running_port} likely in use."
             )
-            # Update status to reflect failure
-            current_pref_ip, current_all_ips = (
-                self._get_local_ips()
-            )  # Get current IPs for status
-            status_update_fail = {
+            status_update = {
                 "text": f"Server Failed on Port {self.running_port}",
-                "color": "red",
-                "ip": current_pref_ip,
-                "all_ips": current_all_ips,
+                "color": self.theme.current["ERROR"],
             }
-            self.gui_queue.put({"type": "server_status", "content": status_update_fail})
-            app_instance_ref = None
-            self.httpd = None  # Ensure httpd is None on failure
+            self.gui_queue.put({"type": "server_status", "content": status_update})
+            self.httpd = None
             return
 
         self.server_thread = threading.Thread(
@@ -452,69 +766,40 @@ class LocalFetchServerApp:
         )
         self.server_thread.start()
 
-        pref_ip, all_other_ips = self._get_local_ips()
-        self.preferred_ip = pref_ip
-        self.all_ips = all_other_ips
-        self.ip_display_var.set(self.preferred_ip if self.preferred_ip else "N/A")
-
+        self._update_ip_info()  # Fetch and display IPs
         status_update = {
-            "text": f"Server Running on {self.preferred_ip}:{self.running_port}",
-            "color": "green",
-            "ip": self.preferred_ip,
-            "port": self.running_port,
-            "all_ips": self.all_ips,
+            "text": f"Server Running",
+            "color": self.theme.current["SUCCESS"],
         }
         self.gui_queue.put({"type": "server_status", "content": status_update})
-
         self.log_to_gui(
-            f"Server started. Listening on {DEFAULT_HOST_NAME}:{self.running_port}"
+            f"Server started on {DEFAULT_HOST_NAME}:{self.running_port}. Access via LAN IPs."
         )
-        self.log_to_gui(f"Access via: {self.preferred_ip}:{self.running_port}")
-        if self.all_ips:
-            self.log_to_gui(f"All detected non-loopback IPs: {', '.join(self.all_ips)}")
 
     def stop_server(self):
         if self.httpd:
             self.log_to_gui("Attempting to shut down server...")
-            shutdown_thread = threading.Thread(target=self.httpd.shutdown)
-            shutdown_thread.daemon = True
-            shutdown_thread.start()
-            shutdown_thread.join(timeout=5)
+            threading.Thread(target=self.httpd.shutdown, daemon=True).start()
             self.httpd.server_close()
-            self.log_to_gui("Server socket closed.")
-
-        if self.server_thread and self.server_thread.is_alive():
-            self.server_thread.join(timeout=2)
-            if self.server_thread.is_alive():
-                self.log_to_gui("Warning: Server thread did not exit cleanly.")
+            self.log_to_gui("Server shut down.")
 
         self.httpd = None
         self.server_thread = None
         global app_instance_ref
         app_instance_ref = None
 
-        current_pref_ip, current_all_ips = (
-            self._get_local_ips()
-        )  # Get current IPs for status
-        status_update = {
-            "text": "Server Offline",
-            "color": "red",
-            "ip": current_pref_ip,  # Show current IP even if server is offline
-            "all_ips": current_all_ips,
-        }
+        status_update = {"text": "Server Offline", "color": self.theme.current["ERROR"]}
         self.gui_queue.put({"type": "server_status", "content": status_update})
-        self.log_to_gui("Server stopped.")
+        self._generate_and_display_qr_code()  # Clear the QR code
 
     def _on_closing(self):
-        if self.httpd and self.server_thread and self.server_thread.is_alive():
+        if self.httpd:
             if messagebox.askokcancel(
                 "Quit", "Server is running. Stop server and quit?"
             ):
                 self.stop_server()
                 self.root.destroy()
         else:
-            # Call stop_server even if httpd is None to ensure consistent state update (e.g. status label)
-            self.stop_server()
             self.root.destroy()
 
 
